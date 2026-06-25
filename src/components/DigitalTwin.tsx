@@ -55,9 +55,13 @@ export default function DigitalTwin() {
       });
 
       if (!res.ok) {
+        const errorMessage =
+          res.status === 429
+            ? "You're sending messages quickly — try again in a moment."
+            : "Request failed. Please try again.";
         setMessages((prev) => [
           ...prev.slice(0, -1),
-          { role: "assistant", content: "Request failed. Please try again.", isError: true },
+          { role: "assistant", content: errorMessage, isError: true },
         ]);
         setStreaming(false);
         return;

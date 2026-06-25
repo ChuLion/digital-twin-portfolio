@@ -6,6 +6,6 @@ export default function robots(): MetadataRoute.Robots {
       userAgent: "*",
       allow: "/",
     },
-    sitemap: "https://jesusdeleon.dev/sitemap.xml",
+    sitemap: "https://digital-twin-portfolio-weld-nu.vercel.app/sitemap.xml",
   };
 }

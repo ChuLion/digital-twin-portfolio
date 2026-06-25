@@ -70,7 +70,7 @@ Data Science, SQL, Tableau, Python, dbt, BigQuery, Alteryx, KNIME, Data Storytel
 - **SEC EDGAR Anomaly Detection:** Financial controls anomaly detection.
 - All projects are production-grade: medallion architecture, CI/CD, dbt testing, documented methodology.
 
-## Recent Work (Feb 2026 – Present) [postRif.md]
+## Recent Work (Feb 2026 – Present) [Recent Work Summary]
 - **Transition target:** Analytics Engineering / Data Engineering / BI Platform Lead roles in NJ pharma corridor, NJ/NY banking & finance, remote.
 - **Method:** Apply production stack (Python → BigQuery → dbt → Tableau) across multiple public-data projects, document decisions as ADRs, add statistical layer (scikit-learn) to demonstrate engineering and analytical depth.
 
@@ -109,7 +109,8 @@ Scoped with stack, statistical layer, and target industry defined — not yet st
 - If asked about something not covered in this prompt (e.g., a specific project not listed, a skill not mentioned, a certification not shown), respond with: "That's not something my résumé or performance history covers directly, so I can't speak to it with authority. What I can tell you is..." and then relate only to what you actually know from the data above.
 - Always include source labels in brackets when citing facts — this proves the information is grounded in real documents.
 - Do not guess or infer specifics. Acknowledge the limit of your knowledge rather than inventing an answer.
-- Keep responses concise (2-4 paragraphs max).
+- Default to 3-5 sentences for most answers. Only use a bulleted list when the question explicitly asks about multiple distinct items (e.g., job titles, projects). Even then, cap it at 3-4 bullets, each a single short clause — not a full sentence restating the whole accomplishment.
+- Cite sources once per answer, near the most important claim — not after every bullet. If every bullet draws from the same one or two sources, cite them once at the end of the list rather than repeating the same bracket tags after each line.
 - Do not break character — you are Jesus M. De Leon's digital twin.`;
 
 const DEFAULT_MODEL = "nvidia/nemotron-3-super-120b-a12b:free";
@@ -157,20 +158,22 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  const { messages, model } = await req.json();
+  const { messages: rawMessages, model } = await req.json();
 
   const selectedModel = model || DEFAULT_MODEL;
   if (!ALLOWED_MODELS.has(selectedModel)) {
     return new Response(`Model not allowed: ${selectedModel}`, { status: 403 });
   }
 
-  // Validate messages
-  if (!Array.isArray(messages) || messages.length === 0) {
+  // Sliding-window truncation: if the conversation exceeds MAX_MESSAGES,
+  // keep only the most recent entries instead of rejecting.
+  const MAX_MESSAGES = 30;
+  if (!Array.isArray(rawMessages) || rawMessages.length === 0) {
     return new Response("Invalid request: messages must be a non-empty array", { status: 400 });
   }
-  if (messages.length > 20) {
-    return new Response("Invalid request: maximum 20 messages", { status: 400 });
-  }
+  const messages = rawMessages.length > MAX_MESSAGES
+    ? rawMessages.slice(-MAX_MESSAGES)
+    : rawMessages;
   for (const msg of messages) {
     if (typeof msg.content !== "string" || msg.content.length > 2000) {
       return new Response("Invalid request: each message content must be a string of at most 2000 characters", { status: 400 });
