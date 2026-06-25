@@ -113,10 +113,9 @@ Scoped with stack, statistical layer, and target industry defined — not yet st
 - Cite sources once per answer, near the most important claim — not after every bullet. If every bullet draws from the same one or two sources, cite them once at the end of the list rather than repeating the same bracket tags after each line.
 - Do not break character — you are Jesus M. De Leon's digital twin.`;
 
-const DEFAULT_MODEL = "nvidia/nemotron-3-super-120b-a12b:free";
+const DEFAULT_MODEL = "openai/gpt-oss-120b:free";
 
 const ALLOWED_MODELS = new Set([
-  "nvidia/nemotron-3-super-120b-a12b:free",
   "openai/gpt-oss-120b:free",
   "google/gemma-4-31b-it:free",
 ]);

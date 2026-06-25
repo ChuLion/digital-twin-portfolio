@@ -10,7 +10,6 @@ interface Message {
 }
 
 const MODELS = [
-  { id: "nvidia/nemotron-3-super-120b-a12b:free", label: "NVIDIA Nemotron 3 Super" },
   { id: "openai/gpt-oss-120b:free", label: "OpenAI gpt-oss-120b" },
   { id: "google/gemma-4-31b-it:free", label: "Google Gemma 4 31B" },
 ];
