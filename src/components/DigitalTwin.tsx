@@ -33,6 +33,13 @@ export default function DigitalTwin() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Listen for the "open-digital-twin" custom event dispatched from Hero
+  useEffect(() => {
+    const handleOpen = () => setOpen(true);
+    window.addEventListener("open-digital-twin", handleOpen);
+    return () => window.removeEventListener("open-digital-twin", handleOpen);
+  }, []);
+
   const send = useCallback(async (options?: {
     textOverride?: string;
     historyOverride?: Message[];
@@ -198,14 +205,32 @@ export default function DigitalTwin() {
           {/* Messages */}
           <div className="flex h-[400px] flex-col gap-3 overflow-y-auto px-4 py-4">
             {messages.length === 0 && (
-              <div className="mt-8 text-center text-sm text-white/30">
-                <p className="mb-1 font-semibold text-white/50">
-                  Jesus M. De Leon — Digital Twin
-                </p>
-                <p>
-                  Ask me about my experience, skills, projects, or anything
-                  career-related.
-                </p>
+              <div className="mt-8 flex flex-col items-center gap-5 text-center text-sm text-white/30">
+                <div>
+                  <p className="mb-1 font-semibold text-white/50">
+                    Jesus M. De Leon — Digital Twin
+                  </p>
+                  <p className="max-w-[300px]">
+                    {"I'm an AI built on Jesus's real résumé and work history — ask me anything, and I'll answer in his voice, with sources."}
+                  </p>
+                </div>
+                <div className="flex flex-wrap justify-center gap-2">
+                  {[
+                    "What roles are you looking for?",
+                    "What's your salary range?",
+                    "What's your experience with dbt?",
+                    "What do you do outside of work?",
+                  ].map((chip) => (
+                    <button
+                      key={chip}
+                      onClick={() => send({ textOverride: chip })}
+                      disabled={streaming}
+                      className="rounded-full border border-white/[0.08] bg-white/[0.04] px-3 py-1.5 text-xs text-white/50 transition-colors hover:border-white/20 hover:bg-white/[0.08] hover:text-white/80 disabled:opacity-40"
+                    >
+                      {chip}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
             {messages.map((msg, i) => (

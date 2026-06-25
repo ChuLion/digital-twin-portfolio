@@ -1,4 +1,4 @@
-import { ArrowDown, BarChart3, Database, Download, Gauge, Layers3 } from "lucide-react";
+import { ArrowDown, BarChart3, Database, Download, Gauge, Layers3, MessageCircle } from "lucide-react";
 import Image from "next/image";
 
 const proofPoints = [
@@ -48,6 +48,13 @@ export default function Hero() {
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
+              <button
+                onClick={() => window.dispatchEvent(new CustomEvent("open-digital-twin"))}
+                className="inline-flex items-center gap-2 rounded-md bg-blue-500 px-4 py-2 font-mono text-xs text-white transition-colors hover:bg-blue-400"
+              >
+                <MessageCircle className="h-3.5 w-3.5" />
+                Ask my digital twin
+              </button>
               <a
                 href="/resume.pdf"
                 download
