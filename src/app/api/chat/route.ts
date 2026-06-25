@@ -185,6 +185,15 @@ export async function POST(req: NextRequest) {
     return new Response(`Model not allowed: ${selectedModel}`, { status: 403 });
   }
 
+  // Build fallback chain: the selected model first, then all other allowed
+  // models in their original order. OpenRouter's "models" parameter
+  // (plural vs singular "model") enables automatic failover when the first
+  // entry is unavailable or rate-limited.
+  const models = [
+    selectedModel,
+    ...([...ALLOWED_MODELS].filter((m) => m !== selectedModel)),
+  ];
+
   // Sliding-window truncation: if the conversation exceeds MAX_MESSAGES,
   // keep only the most recent entries instead of rejecting.
   const MAX_MESSAGES = 30;
@@ -225,7 +234,7 @@ export async function POST(req: NextRequest) {
       "X-Title": "Jesus De Leon - Digital Twin",
     },
     body: JSON.stringify({
-      model: selectedModel,
+      models,
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
         ...messages,
@@ -265,6 +274,9 @@ export async function POST(req: NextRequest) {
 
           try {
             const parsed = JSON.parse(data);
+            if (parsed.model) {
+              console.log("OpenRouter responded with model:", parsed.model);
+            }
             const content = parsed.choices?.[0]?.delta?.content || "";
             if (content) {
               controller.enqueue(new TextEncoder().encode(content));
