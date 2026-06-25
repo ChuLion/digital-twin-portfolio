@@ -39,3 +39,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Local scratch/course material — not part of the portfolio repo
+tutorial.md
+plans/
+docs/postRif.md
