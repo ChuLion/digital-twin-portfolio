@@ -158,9 +158,22 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  const { messages: rawMessages, model } = await req.json();
+  let rawBody: unknown;
+  try {
+    rawBody = await req.json();
+  } catch {
+    return new Response("Invalid request: body must be valid JSON", {
+      status: 400,
+    });
+  }
 
-  const selectedModel = model || DEFAULT_MODEL;
+  const { messages: rawMessages, model } = rawBody as {
+    messages?: unknown;
+    model?: unknown;
+  };
+
+  const selectedModel =
+    typeof model === "string" && model.length > 0 ? model : DEFAULT_MODEL;
   if (!ALLOWED_MODELS.has(selectedModel)) {
     return new Response(`Model not allowed: ${selectedModel}`, { status: 403 });
   }
@@ -175,6 +188,17 @@ export async function POST(req: NextRequest) {
     ? rawMessages.slice(-MAX_MESSAGES)
     : rawMessages;
   for (const msg of messages) {
+    if (
+      !msg ||
+      typeof msg !== "object" ||
+      !("role" in msg) ||
+      (msg.role !== "user" && msg.role !== "assistant")
+    ) {
+      return new Response(
+        'Invalid request: each message role must be "user" or "assistant"',
+        { status: 400 },
+      );
+    }
     if (typeof msg.content !== "string" || msg.content.length > 2000) {
       return new Response("Invalid request: each message content must be a string of at most 2000 characters", { status: 400 });
     }
@@ -190,7 +214,7 @@ export async function POST(req: NextRequest) {
     headers: {
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
-      "HTTP-Referer": "https://jesusdeleon.dev",
+      "HTTP-Referer": "https://digital-twin-portfolio-weld-nu.vercel.app",
       "X-Title": "Jesus De Leon - Digital Twin",
     },
     body: JSON.stringify({

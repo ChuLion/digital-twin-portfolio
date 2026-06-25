@@ -21,29 +21,48 @@ export default function DigitalTwin() {
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
   const [model, setModel] = useState(MODELS[0].id);
+  const messagesRef = useRef<Message[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const lastSentTextRef = useRef("");
 
   useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
+
+  useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const send = useCallback(async (textOverride?: string) => {
-    const text = textOverride !== undefined ? textOverride : input.trim();
+  const send = useCallback(async (options?: {
+    textOverride?: string;
+    historyOverride?: Message[];
+    reuseExistingUser?: boolean;
+  }) => {
+    const text =
+      options?.textOverride !== undefined ? options.textOverride : input.trim();
     if (!text || streaming) return;
     setInput("");
     lastSentTextRef.current = text;
 
     const currentModel = model;
-
-    const userMsg: Message = { role: "user", content: text };
     const assistantMsg: Message = { role: "assistant", content: "" };
-    setMessages((prev) => [...prev, userMsg, assistantMsg]);
+
+    let historyMessages: Message[];
+    if (options?.reuseExistingUser) {
+      historyMessages = options.historyOverride ?? messagesRef.current;
+      if (historyMessages.at(-1)?.role !== "user") return;
+      setMessages([...historyMessages, assistantMsg]);
+    } else {
+      const userMsg: Message = { role: "user", content: text };
+      historyMessages = [...messagesRef.current, userMsg];
+      setMessages([...historyMessages, assistantMsg]);
+    }
+
     setStreaming(true);
 
     try {
-      const history = [...messages, userMsg].map((m) => ({
+      const history = historyMessages.map((m) => ({
         role: m.role,
         content: m.content,
       }));
@@ -92,15 +111,23 @@ export default function DigitalTwin() {
       setStreaming(false);
       inputRef.current?.focus();
     }
-  }, [input, streaming, messages, model]);
+  }, [input, streaming, model]);
 
   const retry = () => {
-    const text = lastSentTextRef.current;
-    if (text) {
-      setInput(text);
-      // Wait for state to update then call send with the text directly
-      send(text);
-    }
+    const currentMessages = messagesRef.current;
+    const sanitizedHistory =
+      currentMessages.at(-1)?.role === "assistant" && currentMessages.at(-1)?.isError
+        ? currentMessages.slice(0, -1)
+        : currentMessages;
+    const lastUserMessage = sanitizedHistory.at(-1);
+
+    if (lastUserMessage?.role !== "user") return;
+
+    send({
+      textOverride: lastUserMessage.content,
+      historyOverride: sanitizedHistory,
+      reuseExistingUser: true,
+    });
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -134,7 +161,7 @@ export default function DigitalTwin() {
 
       {/* Chat panel */}
       {open && (
-        <div className="fixed bottom-24 right-6 z-50 flex w-[380px] flex-col rounded-xl border border-white/[0.08] bg-[#0f1115] shadow-2xl backdrop-blur-xl">
+        <div className="fixed bottom-24 right-6 z-50 flex w-[min(380px,calc(100vw-3rem))] flex-col rounded-xl border border-white/[0.08] bg-[#0f1115] shadow-2xl backdrop-blur-xl">
           {/* Header */}
           <div className="flex items-center justify-between border-b border-white/[0.08] px-4 py-3">
             <div className="flex items-center gap-3">
