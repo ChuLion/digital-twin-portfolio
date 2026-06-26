@@ -19,7 +19,10 @@ const SYSTEM_PROMPT = `You are a "Digital Twin" of Jesus M. De Leon — an Analy
 - **Open to:** Analytics Engineer, BI Engineer, Senior Data Analyst, Analytics Manager roles in NJ/NYC — particularly pharma, financial services, or tech. Available immediately.
 
 ## Summary [Profile.pdf]
-Data engineer with 17+ years of progressive technical experience — starting in RF network infrastructure, moving into capital portfolio analytics, and spending the last several years building production data pipelines for a $4B+ national program at Verizon. Combines operational context (infrastructure that generates data) with analytical depth (executive decisions that consume it). Current focus: analytics engineering — Python → BigQuery → dbt → Tableau pipelines, automated data quality validation, and executive dashboards for capital allocation.
+Data engineer with 17+ years of progressive technical experience — starting in RF network infrastructure, moving into capital portfolio analytics, and spending the last several years building production data pipelines (SQL, Alteryx) for a $4B+ national program at Verizon. Combines operational context (infrastructure that generates data) with analytical depth (executive decisions that consume it). Outside that role, current focus is expanding into a broader analytics-engineering stack — Python, BigQuery, dbt, and Tableau — applied primarily through public portfolio projects, automated data-quality validation, and executive dashboards.
+
+## Summary [Profile.pdf]
+Data engineer with 17+ years of progressive technical experience — starting in RF network infrastructure, moving into capital portfolio analytics, and spending the last several years building production data pipelines (SQL, Alteryx) for a $4B+ national program at Verizon. Combines operational context (infrastructure that generates data) with analytical depth (executive decisions that consume it). Outside that role, current focus is expanding into a broader analytics-engineering stack — Python, BigQuery, dbt, and Tableau — applied primarily through public portfolio projects, automated data-quality validation, and executive dashboards.
 
 ## Key Skills [Profile.pdf]
 Data Science, SQL, Tableau, Python, dbt, BigQuery, Alteryx, KNIME, Data Storytelling, Executive Dashboards, Pipeline Automation, Data Integrity
@@ -125,13 +128,7 @@ Scoped with stack, statistical layer, and target industry defined — not yet st
 - Before citing a source, confirm the exact sentence in that source that supports your claim. If no single sentence supports the full claim, remove or qualify the unsupported part rather than citing the section anyway.
 - Do not break character — you are Jesus M. De Leon's digital twin.`;
 
-const DEFAULT_MODEL = "openai/gpt-oss-120b:free";
-
-const ALLOWED_MODELS = new Set([
-  "openai/gpt-oss-120b:free",
-  "google/gemma-4-31b-it:free",
-]);
-
+const MODELS = ["openai/gpt-oss-120b:free", "google/gemma-4-31b-it:free"];
 // Simple in-memory IP-based rate limiter.
 // NOTE: This resets per server instance and does not share state across
 // multiple concurrent serverless instances — fine for current low-traffic
@@ -178,25 +175,9 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  const { messages: rawMessages, model } = rawBody as {
+  const { messages: rawMessages } = rawBody as {
     messages?: unknown;
-    model?: unknown;
   };
-
-  const selectedModel =
-    typeof model === "string" && model.length > 0 ? model : DEFAULT_MODEL;
-  if (!ALLOWED_MODELS.has(selectedModel)) {
-    return new Response(`Model not allowed: ${selectedModel}`, { status: 403 });
-  }
-
-  // Build fallback chain: the selected model first, then all other allowed
-  // models in their original order. OpenRouter's "models" parameter
-  // (plural vs singular "model") enables automatic failover when the first
-  // entry is unavailable or rate-limited.
-  const models = [
-    selectedModel,
-    ...([...ALLOWED_MODELS].filter((m) => m !== selectedModel)),
-  ];
 
   // Sliding-window truncation: if the conversation exceeds MAX_MESSAGES,
   // keep only the most recent entries instead of rejecting.
@@ -238,7 +219,7 @@ export async function POST(req: NextRequest) {
       "X-Title": "Jesus De Leon - Digital Twin",
     },
     body: JSON.stringify({
-      models,
+      models: MODELS,
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
         ...messages,

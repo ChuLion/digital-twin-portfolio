@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { X, Send, Loader2, ChevronDown, RefreshCw } from "lucide-react";
+import { X, Send, Loader2, RefreshCw } from "lucide-react";
 
 interface Message {
   role: "user" | "assistant";
@@ -9,17 +9,13 @@ interface Message {
   isError?: boolean;
 }
 
-const MODELS = [
-  { id: "openai/gpt-oss-120b:free", label: "OpenAI gpt-oss-120b" },
-  { id: "google/gemma-4-31b-it:free", label: "Google Gemma 4 31B" },
-];
+const MODEL = "openai/gpt-oss-120b:free";
 
 export default function DigitalTwin() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
-  const [model, setModel] = useState(MODELS[0].id);
   const messagesRef = useRef<Message[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -51,7 +47,7 @@ export default function DigitalTwin() {
     setInput("");
     lastSentTextRef.current = text;
 
-    const currentModel = model;
+    const currentModel = MODEL;
     const assistantMsg: Message = { role: "assistant", content: "" };
 
     let historyMessages: Message[];
@@ -117,7 +113,7 @@ export default function DigitalTwin() {
       setStreaming(false);
       inputRef.current?.focus();
     }
-  }, [input, streaming, model]);
+  }, [input, streaming]);
 
   const retry = () => {
     const currentMessages = messagesRef.current;
@@ -182,23 +178,6 @@ export default function DigitalTwin() {
                   Ask anything about my career
                 </p>
               </div>
-            </div>
-            <div className="relative">
-              <select
-                value={model}
-                onChange={(e) => setModel(e.target.value)}
-                className="appearance-none rounded-md border border-white/[0.08] bg-white/[0.04] px-2.5 py-1.5 pr-6 text-xs text-white/70 outline-none transition-colors hover:border-white/20 focus:border-blue-400/40"
-              >
-                {MODELS.map((m) => (
-                  <option key={m.id} value={m.id} className="bg-[#0f1115]">
-                    {m.label}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown
-                size={12}
-                className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-white/40"
-              />
             </div>
           </div>
 
